@@ -76,9 +76,14 @@ public class MemoController {
 		//해당 메모가 DB에 존재하는지 확인
 		if (memoList.containsKey(id)) {
 			// 해당 메모 가져오기
+			// memo 객체를 가진 변수 memo의 key값은 클라이언트에게 받은
+			// pathvaraibel id를 가짐. 나머지 value값인 contents는 초기화
 			Memo memo = memoList.get(id);
+			// 메모 변수는 업데이트 함수를 requestDto로 감싸서 Id값과, contents를 Json 형태로 가짐
 			memo.update(requestDto);
+			// ID를 반환함으로서 종료
 			return memo.getId();
+			//if문이 boolean값이기 때문에 false이면 예외처리
 		} else {
 			throw new IllegalArgumentException("선택한 메모는 존재하지 않습니다.");
 		}
