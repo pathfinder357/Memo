@@ -1,89 +1,86 @@
 package com.sparta.memo.controller;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.sparta.memo.dto.MemoRequestDto;
 import com.sparta.memo.dto.MemoResponseDto;
 import com.sparta.memo.entity.Memo;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.web.bind.annotation.*;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
 public class MemoController {
 
-	// 아직 강의 단계가 db연결 단계가 아니기 때문에 Map자료구조로 db와 유사한 형태를 만듦
-	private final Map<Long, Memo> memoList = new HashMap<>();
+	private final JdbcTemplate jdbcTemplate;
 
-	// 메모 생성하기 API
+	public MemoController(JdbcTemplate jdbcTemplate) {
+		this.jdbcTemplate = jdbcTemplate;
+	}
+
 	@PostMapping("/memos")
-	// 데이터가 바디 형태의 JSON으로 넘어옴 -> 그럼 어떻게 받지? requestBody로
-	// requestDto로 Body의 데이터를 받음 -> createMemo는 requestDto를 받아서 어떤 로직을 수행하는 함수
-	// MemoResponseDto는 반환타입
 	public MemoResponseDto createMemo(@RequestBody MemoRequestDto requestDto) {
-		// requestDto -> Entity(DB와 소통하는 클래스)
-		// memo 엔티티에 뭘 넣어야하지? requestBody로 부터 받아온 데이터를 담는
-		// requestDto(손님의 주문서)를 하나의 객체에 넣어야하지.
-		// 따라서 Memo엔티티에는 이미 붕어빵틀이 있으니 그걸 붕어빵으로 만들려면 밀가루
-		// 즉 생성자를 생성하는 것이 당연한거 ㅇㅇ
-		// 즉 밑의 코드는 받은 데이터(팥)을 담아서 내용물을 채우는 코드
+		// RequestDto -> Entity
 		Memo memo = new Memo(requestDto);
 
-		// Memo Max ID Check
-		Long maxId = memoList.size() > 0 ? Collections.max(memoList.keySet()) + 1 : 1;
-		memo.setId(maxId);
-
 		// DB 저장
-		// ID값도 maxId를 통해서 구했으니 DB(임의로 현재는 Map)에 Id(key) memo(val)를 넣어줌
-		// 진짜 완성된 붕어빵이 손님 봉투에 들어감
-		memoList.put(memo.getId(), memo);
+		KeyHolder keyHolder = new GeneratedKeyHolder(); // 기본 키를 반환받기 위한 객체
+
+		String sql = "INSERT INTO memo (username, contents) VALUES (?, ?)";
+		jdbcTemplate.update( con -> {
+				PreparedStatement preparedStatement = con.prepareStatement(sql,
+					Statement.RETURN_GENERATED_KEYS);
+
+				preparedStatement.setString(1, memo.getUsername());
+				preparedStatement.setString(2, memo.getContents());
+				return preparedStatement;
+			},
+			keyHolder);
+
+		// DB Insert 후 받아온 기본키 확인
+		Long id = keyHolder.getKey().longValue();
+		memo.setId(id);
 
 		// Entity -> ResponseDto
-		// 반환 타입인 responseDto(붕어빵과 그걸 담는 봉투)를 이제 포장하는 단계
-		// 현재 포장이 완성되었고 봉투는 각각 일련번호가 있어서 주문한 손님에 맞게 딱딱 배분됨
 		MemoResponseDto memoResponseDto = new MemoResponseDto(memo);
 
 		return memoResponseDto;
 	}
 
-	// 조회 API
 	@GetMapping("/memos")
-	// List인 이유? Memo(MemoResponseDto)는 당연히 여러개일 가능성이 높으니깐
 	public List<MemoResponseDto> getMemos() {
-		// Map to List
-		List<MemoResponseDto> responseList = memoList.values().stream().map(MemoResponseDto::new).toList();
+		// DB 조회
+		String sql = "SELECT * FROM memo";
 
-		return responseList;
+		return jdbcTemplate.query(sql, new RowMapper<MemoResponseDto>() {
+			@Override
+			public MemoResponseDto mapRow(ResultSet rs, int rowNum) throws SQLException {
+				// SQL 의 결과로 받아온 Memo 데이터들을 MemoResponseDto 타입으로 변환해줄 메서드
+				Long id = rs.getLong("id");
+				String username = rs.getString("username");
+				String contents = rs.getString("contents");
+				return new MemoResponseDto(id, username, contents);
+			}
+		});
 	}
 
-	// 업데이트 API
 	@PutMapping("/memos/{id}")
-	// 반환은 업데이트한 ID만 넘겨줌
-	// 데이터를 수정한다는 것은 데이터의 내용(ex:유저 네임)
-	// 따라서 그 데이터는 클라이언트에서 바디 부분에 JSON 형식으로 받아옴
-	// 따라서 @RequestBody가 당연히 필요
 	public Long updateMemo(@PathVariable Long id, @RequestBody MemoRequestDto requestDto) {
-		//해당 메모가 DB에 존재하는지 확인
-		if (memoList.containsKey(id)) {
-			// 해당 메모 가져오기
-			// memo 객체를 가진 변수 memo의 key값은 클라이언트에게 받은
-			// pathvaraibel id를 가짐. 나머지 value값인 contents는 초기화
-			Memo memo = memoList.get(id);
-			// 메모 변수는 업데이트 함수를 requestDto로 감싸서 Id값과, contents를 Json 형태로 가짐
-			memo.update(requestDto);
-			// ID를 반환함으로서 종료
-			return memo.getId();
-			//if문이 boolean값이기 때문에 false이면 예외처리
+		// 해당 메모가 DB에 존재하는지 확인
+		Memo memo = findById(id);
+		if(memo != null) {
+			// memo 내용 수정
+			String sql = "UPDATE memo SET username = ?, contents = ? WHERE id = ?";
+			jdbcTemplate.update(sql, requestDto.getUsername(), requestDto.getContents(), id);
+
+			return id;
 		} else {
 			throw new IllegalArgumentException("선택한 메모는 존재하지 않습니다.");
 		}
@@ -91,14 +88,32 @@ public class MemoController {
 
 	@DeleteMapping("/memos/{id}")
 	public Long deleteMemo(@PathVariable Long id) {
-		//해당 메모가 DB에 존재하는지 확인
-		if (memoList.containsKey(id)) {
-			// 해당 메모를 삭제
-			memoList.remove(id);
+		// 해당 메모가 DB에 존재하는지 확인
+		Memo memo = findById(id);
+		if(memo != null) {
+			// memo 삭제
+			String sql = "DELETE FROM memo WHERE id = ?";
+			jdbcTemplate.update(sql, id);
+
 			return id;
 		} else {
 			throw new IllegalArgumentException("선택한 메모는 존재하지 않습니다.");
 		}
 	}
 
+	private Memo findById(Long id) {
+		// DB 조회
+		String sql = "SELECT * FROM memo WHERE id = ?";
+
+		return jdbcTemplate.query(sql, resultSet -> {
+			if(resultSet.next()) {
+				Memo memo = new Memo();
+				memo.setUsername(resultSet.getString("username"));
+				memo.setContents(resultSet.getString("contents"));
+				return memo;
+			} else {
+				return null;
+			}
+		}, id);
+	}
 }
