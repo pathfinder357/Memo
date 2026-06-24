@@ -2,7 +2,6 @@ package com.sparta.memo.controller;
 
 import java.util.List;
 
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,8 +21,12 @@ public class MemoController {
 
 	private final MemoService memoService;
 
-	public MemoController(JdbcTemplate jdbcTemplate) {
-		this.memoService = new MemoService(jdbcTemplate);
+	// public MemoController(MemoService memoService)는 auto-wired 할수 없다고 뜸
+	// 의문점? 외부에서 미리 만든 객체를 주입하는 DI패턴이기 때문에 기존 코드를 엎엇음
+	// 도대체 서비스, 컨트롤러, 레퍼지토리는 메인 메서드에 아무것도 적지 않았는데 어디서 주입시킨다는거?
+	//
+	public MemoController(MemoService memoService) {
+		this.memoService = memoService;
 	}
 
 	@PostMapping("/memos")

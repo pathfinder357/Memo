@@ -14,9 +14,11 @@ public class MemoService {
 	private final MemoRepository memoRepository;
 
 	// MemoService가 생성될때 파라미터 JdbcTemplate를 받아서
-	public MemoService(JdbcTemplate jdbcTemplate) {
+	// 근데 위의 주석처럼 되면 의존성이 강해짐
+	// 따라서
+	public MemoService(MemoRepository memoRepository) {
 		// 여기서 memoRepository를 딱 하나 만드는 것
-		this.memoRepository = new MemoRepository(jdbcTemplate);
+		this.memoRepository = memoRepository;
 	}
 
 
