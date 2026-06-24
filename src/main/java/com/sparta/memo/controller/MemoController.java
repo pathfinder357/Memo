@@ -20,10 +20,10 @@ import com.sparta.memo.service.MemoService;
 @RequestMapping("/api")
 public class MemoController {
 
-	private final JdbcTemplate jdbcTemplate;
+	private final MemoService memoService;
 
 	public MemoController(JdbcTemplate jdbcTemplate) {
-		this.jdbcTemplate = jdbcTemplate;
+		this.memoService = new MemoService(jdbcTemplate);
 	}
 
 	@PostMapping("/memos")
@@ -31,21 +31,18 @@ public class MemoController {
 
 		// 객체간 이동(다른 클래스의 메서드를 호출)
 		// 하기 위해서는 객체를 만들어야함(instance화)
-		MemoService memoService = new MemoService(jdbcTemplate);
 		 return memoService.createMemo(requestDto);
 	}
 
 	@GetMapping("/memos")
 	public List<MemoResponseDto> getMemos() {
 
-		MemoService memoService = new MemoService(jdbcTemplate);
 		return memoService.getMemos();
 	}
 
 	@PutMapping("/memos/{id}")
 	public Long updateMemo(@PathVariable Long id, @RequestBody MemoRequestDto requestDto) {
 
-		MemoService memoService = new MemoService(jdbcTemplate);
 		return memoService.updateMemos(id, requestDto);
 		// 해당 메모가 DB에 존재하는지 확인
 
@@ -53,7 +50,6 @@ public class MemoController {
 
 	@DeleteMapping("/memos/{id}")
 	public Long deleteMemo(@PathVariable Long id) {
-		MemoService memoService = new MemoService(jdbcTemplate);
 		return memoService.deleteMemo(id);
 	}
 
