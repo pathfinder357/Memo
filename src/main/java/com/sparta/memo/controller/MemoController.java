@@ -21,10 +21,10 @@ public class MemoController {
 
 	private final MemoService memoService;
 
-	// public MemoController(MemoService memoService)는 auto-wired 할수 없다고 뜸
+	// public MemoController(MemoService memoService)는 auto-wired 할수 없다고 뜸(그러한 Bean타입을 찾을수없다)
 	// 의문점? 외부에서 미리 만든 객체를 주입하는 DI패턴이기 때문에 기존 코드를 엎엇음
 	// 도대체 서비스, 컨트롤러, 레퍼지토리는 메인 메서드에 아무것도 적지 않았는데 어디서 주입시킨다는거?
-	//
+	// bean은 스프링이 관리하는 객체 & Ioc Container는 빈을 모아둔 하나의 container
 	public MemoController(MemoService memoService) {
 		this.memoService = memoService;
 	}

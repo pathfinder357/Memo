@@ -2,20 +2,21 @@ package com.sparta.memo.service;
 
 import java.util.List;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Service;
 
 import com.sparta.memo.dto.MemoRequestDto;
 import com.sparta.memo.dto.MemoResponseDto;
 import com.sparta.memo.entity.Memo;
 import com.sparta.memo.repository.MemoRepository;
 
+// component 어노테이션을 사용함으로써 스프링에서 MemoService를 Bean으로 등록함
+@Service
 public class MemoService {
 
 	private final MemoRepository memoRepository;
 
 	// MemoService가 생성될때 파라미터 JdbcTemplate를 받아서
 	// 근데 위의 주석처럼 되면 의존성이 강해짐
-	// 따라서
 	public MemoService(MemoRepository memoRepository) {
 		// 여기서 memoRepository를 딱 하나 만드는 것
 		this.memoRepository = memoRepository;
