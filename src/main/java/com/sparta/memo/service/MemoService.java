@@ -1,8 +1,10 @@
 package com.sparta.memo.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.sparta.memo.dto.MemoRequestDto;
 import com.sparta.memo.dto.MemoResponseDto;
@@ -25,7 +27,11 @@ public class MemoService {
 
 	public List<MemoResponseDto> getMemos() {
 
-		return memoRepository.findAll();
+		// stream()에서 memo가 하나씩 빠져나가면서 .map()에 의해 변환이 됨
+		// MemoResponseDto의 생성자 중에서 memo를 파라미터로 가지고있는 생성자 호출
+		// 하나 씩 변환하는 호출 된 객체를 list 타입으로 바꿔줌
+
+		return memoRepository.findAll().stream().map(MemoResponseDto::new).toList();
 
 	}
 
@@ -43,32 +49,32 @@ public class MemoService {
 		return memoResponseDto;
 	}
 
+	@Transactional
 	public Long updateMemos(Long id, MemoRequestDto requestDto) {
 
-
-
-		Memo memo = memoRepository.findById(id);
-		if(memo != null) {
+		Memo memo = findMemo(id);
 			// memo 내용 수정
-			memoRepository.update(id, requestDto);
+			memo.update(requestDto);
 
 			return id;
-		} else {
-			throw new IllegalArgumentException("선택한 메모는 존재하지 않습니다.");
-		}
+
+
 	}
 
 
 
 	public Long deleteMemo(Long id) {
 		// 해당 메모가 DB에 존재하는지 확인
-		Memo memo = memoRepository.findById(id);
-		if(memo != null) {
-			// memo 삭제
-			memoRepository.delete(id);
-			return id;
-		} else {
-			throw new IllegalArgumentException("선택한 메모는 존재하지 않습니다.");
-		}
+		Memo memo = findMemo(id);
+
+		// memo 삭제
+		memoRepository.delete(memo);
+		return id;
+
+	}
+
+	private Memo findMemo(Long id) {
+		return memoRepository.findById(id).orElseThrow(() ->
+			new IllegalArgumentException("Memo not found"));
 	}
 }

@@ -1,5 +1,7 @@
 package com.sparta.memo.entity;
 
+import java.time.LocalDateTime;
+
 import com.sparta.memo.dto.MemoRequestDto;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -11,7 +13,7 @@ import lombok.Setter;
 @Setter
 @Table(name = "memo") // 매핑할 테이블의 이름을 지정
 @NoArgsConstructor // 기본 생성자 자동
-public class Memo {
+public class Memo extends Timestamped{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -19,6 +21,8 @@ public class Memo {
 	private String username;
 	@Column(name = "contents", nullable = false, length = 500)
 	private String contents;
+	@Column
+	private LocalDateTime createdAt;
 
 	public Memo(MemoRequestDto requestDto) {
 		this.username = requestDto.getUsername();
