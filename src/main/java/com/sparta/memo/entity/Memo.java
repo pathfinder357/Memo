@@ -1,20 +1,24 @@
 package com.sparta.memo.entity;
 
 import com.sparta.memo.dto.MemoRequestDto;
-
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Entity // JPA가 관리할 수 있는 Entity 클래스 지정
 @Getter
 @Setter
-@NoArgsConstructor
+@Table(name = "memo") // 매핑할 테이블의 이름을 지정
+@NoArgsConstructor // 기본 생성자 자동
 public class Memo {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	@Column(name = "username", nullable = false)
 	private String username;
+	@Column(name = "contents", nullable = false, length = 500)
 	private String contents;
-
-	// 생성자 만드는 이유 : 클라이언트에서 받아온 데이터(requestDto)를 위에 선언한 id,username,contetns에 데이터를 넣어주기 위함
 
 	public Memo(MemoRequestDto requestDto) {
 		this.username = requestDto.getUsername();
