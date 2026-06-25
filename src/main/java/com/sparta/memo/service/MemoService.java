@@ -31,8 +31,10 @@ public class MemoService {
 		// MemoResponseDto의 생성자 중에서 memo를 파라미터로 가지고있는 생성자 호출
 		// 하나 씩 변환하는 호출 된 객체를 list 타입으로 바꿔줌
 
-		return memoRepository.findAll().stream().map(MemoResponseDto::new).toList();
-
+		// return memoRepository.findAll().stream().map(MemoResponseDto::new).toList();
+		// 기존의 findall()은 japrepository에 있지만, findAllByOrderByModifiedAtDesc은 없음
+		// 우리가 레퍼지토리 클래스를 만들고 선언했기때문에 아래 명령어 사용이 가능
+		return memoRepository.findAllByOrderByModifiedAtDesc().stream().map(MemoResponseDto::new).toList();
 	}
 
 	public MemoResponseDto createMemo(MemoRequestDto requestDto) {
