@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.sparta.memo.dto.MemoRequestDto;
 import com.sparta.memo.dto.MemoResponseDto;
@@ -36,6 +38,12 @@ public class MemoService {
 		// 우리가 레퍼지토리 클래스를 만들고 선언했기때문에 아래 명령어 사용이 가능
 		return memoRepository.findAllByOrderByModifiedAtDesc().stream().map(MemoResponseDto::new).toList();
 	}
+
+	public List<MemoResponseDto> getMemosByKeyword(String keyword) {
+		return memoRepository.findAllByContentsContainsOrderByModifiedAtDesc(keyword).stream().map(MemoResponseDto::new).toList();
+	}
+
+
 
 	public MemoResponseDto createMemo(MemoRequestDto requestDto) {
 		// RequestDto -> Entity
@@ -74,6 +82,7 @@ public class MemoService {
 		return id;
 
 	}
+
 
 	private Memo findMemo(Long id) {
 		return memoRepository.findById(id).orElseThrow(() ->
